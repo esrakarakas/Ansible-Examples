@@ -1,0 +1,45 @@
+---
+  - hosts: masters
+    remote_user: centos
+    become: yes
+    become_method: sudo
+    become_user: root
+
+    vars:
+      api_addr: "{{ansible_default_ipv4.address}}"
+      cidr_subnet: 192.168.7.115/22
+      cidr_ip: 192.168.7.115
+      cni: https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+      token_path: /etc/kubernetes/join_token
+    tasks:     
+      - name: Cluster CNI Config
+        shell: kubeadm init --pod-network-cidr={{cidr_subnet}} --apiserver-advertise-address={{api_addr}}
+        register: output
+        ignore_errors: yes
+
+      - name: Init output save file
+        action: copy content={{output.stdout}} dest={{token_path}}
+        ignore_errors: yes
+
+      - name: Init requirement copy file
+        shell: |
+          mkdir -p $HOME/.kube
+          sudo cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
+          sudo chown $(id -u):$(id -g) $HOME/.kube/config
+        ignore_errors: yes
+
+      - name: CNI install
+        command: curl -o flannel.yaml {{cni}}
+        ignore_errors: yes
+
+      - name: CNI flannel apply
+        command: kubectl apply -f flannel.yaml
+        ignore_errors: yes
+
+      - name: K8S Container up wait (2 minute)
+        pause:
+            minutes: 1
+
+     # - name: set worker node
+     #   shell: kubectl taint nodes --all node-role.kubernetes.io/master-
+
