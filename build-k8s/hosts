@@ -1,0 +1,10 @@
+[masters]
+master ansible_host=192.168.7.115 ansible_user=centos
+
+[workers]
+worker1 ansible_host=192.168.7.116 ansible_user=centos
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+
+
