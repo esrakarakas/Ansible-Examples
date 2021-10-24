@@ -1,0 +1,51 @@
+---
+- hosts: masters
+  user: centos
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  vars:
+    node_name: "server-esra-karakas-1"
+
+  tasks:
+  - name: Add label on kubernetes node. 
+    shell: kubectl label nodes {{node_name}} disktype=ssd
+    register: control
+    ignore_errors: true
+  - debug: msg="{{control}}"
+    ignore_errors: true
+  - name: Create namespace
+    shell: kubectl create namespace monitoring
+    ignore_errors: true
+  - name: Copy clusterRole.yaml
+    copy:
+      src: files/clusterRole.yaml
+      dest: /home/centos
+    ignore_errors: true
+
+  - name: Create clusterRole.yaml
+    shell: kubectl create -f /home/centos/clusterRole.yaml
+    ignore_errors: true
+
+  - name: Copy config.map
+    copy:
+      src: files/config-map.yaml
+      dest: /home/centos
+    ignore_errors: true
+
+  - name: Create config-map.yaml
+    shell: kubectl create -f /home/centos/config-map.yaml -n monitoring
+    ignore_errors: true
+
+  - name: Copy prometheus-deployment.yaml
+    copy:
+      src: files/prometheus-deployment.yaml
+      dest: /home/centos
+    ignore_errors: true
+
+  - name: Create prometheus-deployment.yaml
+    shell: kubectl create -f /home/centos/prometheus-deployment.yaml --namespace=monitoring
+    ignore_errors: true
+
+
