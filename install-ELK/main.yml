@@ -1,0 +1,43 @@
+
+- hosts: localhost
+  user: root
+  become: yes
+  become_method: sudo
+  tasks:
+   - name: install elasticsearch rpm key
+     rpm_key:
+       key: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+       state: present
+     become: true
+
+   - name: install elasticsearch 7.x rpm repository
+     yum_repository:
+       name: elasticsearch-7.x
+       description: Elasticsearch repository for 7.x packages
+       baseurl: https://artifacts.elastic.co/packages/7.x/yum
+       gpgcheck: true
+       gpgkey: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+     become: true
+   - name: install java & elasticsearch 7.x
+     yum:
+       name: "{{ item }}"
+       state: present
+       update_cache: true
+     loop:
+       - java-1.8.0-openjdk
+       - elasticsearch
+     become: true
+   - name: elasticsearch is installed
+     yum: name=elasticsearch state=installed
+   - name: elasticsearch is running and enabled
+     service: name=elasticsearch state=started enabled=yes
+   - name: kibana is installed
+     yum: name=kibana state=installed
+   - name: kibana is running and enabled
+     service: name=kibana state=started enabled=yes
+   - name: logstash is installed
+     yum: name=logstash state=installed
+   - name: logstash is running and enabled
+     service: name=logstash state=started enabled=yes
+
+
