@@ -1,0 +1,73 @@
+---
+- hosts: all
+  become: yes
+  become_method: sudo
+  gather_facts: yes
+  tags: [consul]
+
+  tasks:
+
+    - name: Update the software package repository
+      yum:
+        update_cache: yes
+    - name: Install dependencies
+      package:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+          - curl
+          - net-tools
+          - unzip
+          - gnupg2
+    - name: Install consul
+      unarchive:
+         src: https://releases.hashicorp.com/consul/1.10.3/consul_1.10.3_linux_amd64.zip
+         dest: /usr/local/bin
+         remote_src: yes
+    #- name: Verify consul installation
+    #  shell: "consul --version"
+    - name: Create consul group
+      group:
+        name: consul
+        state: present
+        system: true
+    - name: Create consul user
+      user:
+        name: consul
+        group: consul
+        shell: /bin/false
+        home: /etc/consul/
+        state: present
+    - name: Create Consul /var directory
+      file:
+        path: /var/lib/consul
+        state: directory
+        owner: consul
+        group: consul
+        mode: 0755
+    - name: Create Consul /etc directory
+      file:
+        path: /etc/consul.d
+        state: directory
+        owner: consul
+        group: consul
+    - name: Copy consul service file
+      template:
+        src: service/consul.service
+        dest: /etc/systemd/system/consul.service
+        mode: 0644
+      notify: Restart consul
+
+    - name: Set file permissions
+      file:
+        path: "/etc/systemd/system/consul.service"
+        owner: consul
+        group: consul
+
+    - name: enable service consul
+      systemd:
+        name: consul
+        enabled: true
+                                                                                                                                 
+    - name: restart consul
+      action: service name=consul state=restarted enabled=yes
