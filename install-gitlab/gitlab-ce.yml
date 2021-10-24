@@ -1,0 +1,12 @@
+- name: Main Task | Installing and Configuring GitLab CE on RHEL/CentOS
+  hosts: gitlab-server
+  user: centos
+  become: yes
+  become_method: sudo
+  become_user: root
+
+  user: root
+  tasks: 
+    - include: tasks/main.yml
+  handlers:
+    - include: handlers/main.yml
