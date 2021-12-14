@@ -1,4 +1,4 @@
-# Trendyol-DevOps-Case
+# Ansible-Examples
 
 
 This repository contains the Ansible installation files of applications for Centos 7.
